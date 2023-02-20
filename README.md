@@ -138,7 +138,7 @@ If not done already, create specific folder 'checkpoints' in 'code' folder to st
 To train the model run ```main.py```.
 After training the model you can visualize the results on validation data by running ```test_show.py```. It will show the image along with the title containing real captions, generated captions and the BLEU score (2 and 3).
 
-Model with **B = 32 ** and **HIDDEN_DIM = 512**:
+Model with **B = 32** and **HIDDEN_DIM = 512**:
 
 ![Examples](./predicted_examples/32B512H_1.png ) ![Examples](./predicted_examples/32B512H_2.png ) 
 
@@ -150,7 +150,7 @@ Model with **B = 32 ** and **HIDDEN_DIM = 512**:
 
 Run ```predict_sample.py  sample_image.jpg``` to generate captions on an image (in ROOT path).
 
-Model with **B = 32 ** and **HIDDEN_DIM = 512**:
+Model with **B = 32** and **HIDDEN_DIM = 512**:
 
 ![Examples](./predicted_examples/32B512H_example1.png ) ![Examples](./predicted_examples/32B512H_example2.png ) 
 
