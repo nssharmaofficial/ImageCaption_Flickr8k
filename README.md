@@ -136,7 +136,7 @@ If not done already, create specific folder 'checkpoints' in 'code' folder to st
 ## Training and evaluating data
 
 To train the model run ```main.py```.
-After training the model you can visualize the results on validation data by running ```test_show.py```. It will show the image along with the title containing real captions, generated captions and the BLEU score (2 and 3).
+After training the model you can visualize the results on validation data by running ```test_show.py```. It will show the image along with the title containing real captions, generated captions and the BLEU score (1 and 2).
 
 Model with **B = 32** and **HIDDEN_DIM = 512**:
 
