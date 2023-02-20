@@ -4,6 +4,7 @@ from config import *
 from dataset import (ImageCaptionDataset, get_data_loader,preprocessing_transforms)
 from model import Decoder, Encoder, get_acc
 from vocab import Vocab
+import gc
 
 if __name__ == '__main__':
     
@@ -44,6 +45,16 @@ if __name__ == '__main__':
 
     print("Beginning Training")
     
+    training_batch_losses = []
+    training_batch_accuracies = []
+    validation_batch_losses = []
+    validation_batch_accuracies = []
+    
+    training_losses = []
+    training_acc = []
+    validation_losses = []
+    validation_acc = []
+    
     for epoch in range(0, config.EPOCHS):
         
         for i, batch in enumerate(train_loader):
@@ -66,8 +77,8 @@ if __name__ == '__main__':
             features = features.unsqueeze(0) 
             # features : (1, BATCH, IMAGE_EMB_DIM)
             
-            loss = 0
-            accuracy = 0
+            t_loss = 0
+            t_accuracy = 0
             
             BATCH_SIZE = captions_batch.shape[0]
             SEQ_LENGTH = captions_batch.shape[1] 
@@ -97,90 +108,144 @@ if __name__ == '__main__':
                 # output : (BATCH, VOCAB_SIZE)
                 
                 # sum up loss and accuracy for each word (!=pad) in sentence for each training example in batch
-                loss += criterion(output, decoder_targets[:, j+1]) * mask[:, j+1]
-                accuracy += get_acc(output, decoder_targets[:, j+1]) * mask[:, j+1]
+                t_loss += criterion(output, decoder_targets[:, j+1]) * mask[:, j+1]
+                t_accuracy += get_acc(output, decoder_targets[:, j+1]) * mask[:, j+1]
     
 
             # loss summed up through batch divided by the total number of words (!=pad) in batch 
-            # ensures that each non-pad token in the batch contributes equally to the overall loss,
-            # regardless of the length of the individual examples.
-            loss = loss.sum()/mask.sum().item()
-            accuracy = accuracy.sum()/mask.sum().item()
+            t_loss = t_loss.sum()/mask.sum().item()
+            t_accuracy = t_accuracy.sum()/mask.sum().item()
                 
             optimizer.zero_grad()
-            loss.backward()
+            t_loss.backward()
             optimizer.step()
             
             # Print stats every 100 iterations
             if i % 100 == 0:
-                print("Epoch: [%d/%d], Step: [%d/%d], Loss: %.3f, Accuracy: %.3f " % (epoch+1, config.EPOCHS, i, len(train_loader), loss.item(), accuracy*100))     
+                print("Epoch: [%d/%d], Step: [%d/%d], Loss: %.3f, Accuracy: %.3f " % (epoch+1, config.EPOCHS, i, len(train_loader), t_loss.item(), t_accuracy*100))     
                 
-            
+            # store results for each batch  
+            t_loss = t_loss.to(torch.device("cpu"))
+            t_accuracy = t_accuracy.to(torch.device("cpu"))
+            training_batch_losses.append(t_loss) 
+            training_batch_accuracies.append(t_accuracy)
+        
+        # get the average results for each epoch
+        training_loss_avg = sum(training_batch_losses) / len(training_batch_losses)
+        training_acc_avg = sum(training_batch_accuracies)/ len(training_batch_accuracies)
+        training_losses.append(float(training_loss_avg.item()))
+        training_acc.append(float(training_acc_avg.item()))
+        
+        torch.cuda.empty_cache()
+        gc.collect()
+        
+        #print(training_losses, training_acc)
+        
+        
         for k, batch in enumerate(val_loader):
             
             image_encoder.eval()
             emb_layer.eval()
             image_decoder.eval()
-            
-            image_batch, captions_batch = batch[0].to(config.DEVICE), batch[1].to(config.DEVICE) 
-            # image_batch : (BATCH, 3, 224, 224)
-            # captions_batch : (BATCH, SEQ_LENGTH)
-            
-            decoder_targets = captions_batch[:, :] 
-            decoder_inputs = captions_batch[:, :]
-            mask = (decoder_targets != vocab.PADDING_INDEX).float()
-            
-            features = image_encoder(image_batch) 
-            # features : (32, IMAGE_EMB_DIM)
-            features = features.unsqueeze(0) 
-            # features : (1, BATCH, IMAGE_EMB_DIM)
-            
-            loss = 0
-            accuracy = 0
-
-            BATCH_SIZE = captions_batch.shape[0]
-            SEQ_LENGTH = captions_batch.shape[1]
-            
-            hidden= image_decoder.hidden_state_0.repeat(1,BATCH_SIZE,1) 
-            cell =image_decoder.cell_state_0.repeat(1,BATCH_SIZE,1) 
-            # hidden and cell : (NUM_LAYER, BATCH, HIDDEN_DIM)
-            
-            emb_captions_batch = emb_layer(decoder_inputs) 
-            # captions_batch : (BATCH, SEQ_LENGTH, WORD_EMB_DIM)
-            emb_captions_batch = emb_captions_batch.permute(1,0,2) 
-            # captions_batch : (SEQ_LENGTH, BATCH, WORD_EMB_DIM)
         
-            for j in range(SEQ_LENGTH-1):
-                               
-                emb_word_batch = emb_captions_batch[j,:,:] 
-                # lstm_input : (--SEQ_LENGTH--, BATCH, WORD_EMB_DIM) -> (BATCH, WORD_EMBD_DIM)
-                emb_word_batch = emb_word_batch.unsqueeze(0) 
-                # lstm_input : (1, BATCH, WORD_EMB_DIM)
+            with torch.no_grad():
+            
+                image_batch, captions_batch = batch[0].to(config.DEVICE), batch[1].to(config.DEVICE) 
+                # image_batch : (BATCH, 3, 224, 224)
+                # captions_batch : (BATCH, SEQ_LENGTH)
                 
-                output, (hidden, cell) = image_decoder(emb_word_batch, features, hidden, cell)
-                # output : (1, BATCH, VOCAB_SIZE)
-                # hidden and cell : (1, BATCH,HIDDEN_DIM)
+                decoder_targets = captions_batch[:, :] 
+                decoder_inputs = captions_batch[:, :]
+                mask = (decoder_targets != vocab.PADDING_INDEX).float()
                 
-                output = output.squeeze(0)
-                # output : (BATCH, VOCAB_SIZE)
+                features = image_encoder(image_batch) 
+                # features : (32, IMAGE_EMB_DIM)
+                features = features.unsqueeze(0) 
+                # features : (1, BATCH, IMAGE_EMB_DIM)
                 
-                # sum up loss and accuracy for each word (!=pad) in sentence for each validation example in batch
-                loss += criterion(output, decoder_targets[:, j+1]) * mask[:, j+1]
-                accuracy += get_acc(output, decoder_targets[:, j+1]) * mask[:, j+1]
+                v_loss = 0
+                v_accuracy = 0
+
+                BATCH_SIZE = captions_batch.shape[0]
+                SEQ_LENGTH = captions_batch.shape[1]
                 
-            # loss summed up through batch divided by the total number of words (!=pad) in batch 
-            # ensures that each non-pad token in the batch contributes equally to the overall loss,
-            # regardless of the length of the individual examples.
-            loss = loss.sum() / mask.sum().item()
-            accuracy = accuracy.sum() / mask.sum().item()                      
-            # Print stats every 100 iterations
-            if k % 100 == 0:
-                print("Epoch: [%d/%d], Step: [%d/%d], Loss: %.3f,  Accuracy: %.3f " % (epoch+1, config.EPOCHS, k, len(val_loader), loss.item(), accuracy*100))  
-                     
+                hidden= image_decoder.hidden_state_0.repeat(1,BATCH_SIZE,1) 
+                cell =image_decoder.cell_state_0.repeat(1,BATCH_SIZE,1) 
+                # hidden and cell : (NUM_LAYER, BATCH, HIDDEN_DIM)
+                
+                emb_captions_batch = emb_layer(decoder_inputs) 
+                # captions_batch : (BATCH, SEQ_LENGTH, WORD_EMB_DIM)
+                emb_captions_batch = emb_captions_batch.permute(1,0,2) 
+                # captions_batch : (SEQ_LENGTH, BATCH, WORD_EMB_DIM)
+            
+                for j in range(SEQ_LENGTH-1):
+                                
+                    emb_word_batch = emb_captions_batch[j,:,:] 
+                    # lstm_input : (--SEQ_LENGTH--, BATCH, WORD_EMB_DIM) -> (BATCH, WORD_EMBD_DIM)
+                    emb_word_batch = emb_word_batch.unsqueeze(0) 
+                    # lstm_input : (1, BATCH, WORD_EMB_DIM)
+                    
+                    output, (hidden, cell) = image_decoder(emb_word_batch, features, hidden, cell)
+                    # output : (1, BATCH, VOCAB_SIZE)
+                    # hidden and cell : (1, BATCH,HIDDEN_DIM)
+                    
+                    output = output.squeeze(0)
+                    # output : (BATCH, VOCAB_SIZE)
+                    
+                    # sum up loss and accuracy for each word (!=pad) in sentence for each validation example in batch
+                    v_loss += criterion(output, decoder_targets[:, j+1]) * mask[:, j+1]
+                    v_accuracy += get_acc(output, decoder_targets[:, j+1]) * mask[:, j+1]
+                    
+                # loss summed up through batch divided by the total number of words (!=pad) in batch 
+                v_loss = v_loss.sum() / mask.sum().item()
+                v_accuracy = v_accuracy.sum() / mask.sum().item()   
+                                
+                # Print stats every 100 iterations
+                if k % 100 == 0:
+                    print("Epoch: [%d/%d], Step: [%d/%d], Loss: %.3f,  Accuracy: %.3f " % (epoch+1, config.EPOCHS, k, len(val_loader), v_loss.item(), v_accuracy*100))  
+            
+                # store results for each batch
+                v_loss = v_loss.to(torch.device("cpu"))
+                v_accuracy = v_accuracy.to(torch.device("cpu"))
+                validation_batch_losses.append(v_loss) 
+                validation_batch_accuracies.append(v_accuracy)
+            
+        # get the average results for each epoch
+        validation_loss_avg = sum(validation_batch_losses) / len(validation_batch_losses)
+        validation_acc_avg = sum(validation_batch_accuracies) / len(validation_batch_accuracies)
+        validation_losses.append(float(validation_loss_avg.item()))
+        validation_acc.append(float(validation_acc_avg.item()))
+        
+        
+        torch.cuda.empty_cache()
+        gc.collect()
+        
+        #print(validation_losses, validation_acc)
+
         # save model after every epoch
         torch.save(image_encoder.state_dict(), f"checkpoints/encoder-{config.BATCH}B-{config.HIDDEN_DIM}H-{config.NUM_LAYER}L-e{epoch+1}.pt")
         torch.save(emb_layer.state_dict(), f"checkpoints/embeddings-{config.BATCH}B-{config.HIDDEN_DIM}H-{config.NUM_LAYER}L-e{epoch+1}.pt")
         torch.save(image_decoder.state_dict(), f"checkpoints/decoder-{config.BATCH}B-{config.HIDDEN_DIM}H-{config.NUM_LAYER}L-e{epoch+1}.pt")
+        
+    
+    from matplotlib import pyplot as plt
+    
+    plt.subplot(1,2,1)
+    plt.plot(training_acc)
+    plt.plot(validation_acc)
+    plt.title('Accuracies vs Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend(['Train', 'Validation'])
 
+    plt.subplot(1,2,2)
+    plt.plot(training_losses)
+    plt.plot(validation_losses)
+    plt.title('Losses vs Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend(['Train', 'Validation'])
+    
+    plt.savefig(f'saved/{config.BATCH}B-{config.HIDDEN_DIM}H-{config.NUM_LAYER}L.jpg')
 
 
