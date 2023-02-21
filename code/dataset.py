@@ -104,7 +104,7 @@ class ImageCaptionDataset():
 class Padding:
 
     def __init__(self, pad_idx:int, batch_first=True):
-        """ Apply the padding to the captions with dataloader
+        """ When called in DataLoader it returns batched images with batched padded captions
 
         Args:
             pad_idx (int): value of padding index to be used for padding the captions
