@@ -2,13 +2,13 @@
 
 Image captioning model in pytorch using Resnet50 as encoder and LSTM as decoder.
 
-### Update: 
+### Update - important: 
 
 The ```main_update.py``` has a different approach in training:
-- LSTM layer computes the output of length = ```SEQ_LENGTH``` (instead of length = ```1``` as in ```main.py```) 
+- LSTM layer takes input and computes the output of length = ```SEQ_LENGTH``` (instead of length = ```1``` as in ```main.py```) 
 - to make this work, the ```features``` have dimension ```(SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(SEQ_LENGTH, BATCH, WORD_EMB_DIM)```
 
-In the ```model_update.py``` there are only slight changes in the comments to fit the description.
+In the ```model_update.py``` there are only slight changes in the comments to fit the description, but works just as ```model.py```
 
 In the checkpoints folder there are weights trained on the new network with the prefix ```NEW_```
 
@@ -99,12 +99,11 @@ Image encoder is used to obtain features from images. The encoder consists of pr
 
 Embedding layer is used to obtain embedded representation (as a dense vector) of captions of dimension ```(WORD_EMB_DIM)```.  When training the model, the embedding layer is updated to learn better word representations through the optimization process.
 
-
 ### Decoder
 
 Decoder taking as input for the LSTM layer the concatenation of features obtained from the encoder and embedded captions obtained from the embedding layer. Hidden and cell states are zero initialized . Final classifier is a linear layer with output dimension of ```(VOCAB_SIZE)```.
 
-**Note**: during the training and evaluation, the model is used to generate captions ***word-by-word***, therefore the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```.
+**(old version) Note**: during the training and evaluation, the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```. This approach, however does not bring the full potential out of LSTM. Please check the ```main_updated.py``` for better approach, where the whole sentence is concatenated to the features.
 
 <br>
 
@@ -146,6 +145,8 @@ If not done already, create specific folder 'checkpoints' in 'code' folder to st
 
 To train the model run ```main.py```.
 After training the model you can visualize the results on validation data by running ```test_show.py```. It will show the image along with the title containing real captions, generated captions and the BLEU score (1 and 2).
+
+Captions are generated **word-by-word** starting with the SOS token. Next predicted word IDs are then being appended for the next LSTM input.
 
 Model with **B = 32** and **HIDDEN_DIM = 512**:
 
