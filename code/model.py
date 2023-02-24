@@ -136,7 +136,7 @@ class Decoder(nn.Module):
         output = output.to(self.device)
         
         output = self.fc(output)
-        # output : (length = 1, BATCH, VOCAB_SIZE)
+        # output : (SEQ_LENGTH, BATCH, VOCAB_SIZE)
         
         return output, (hidden, cell)
 
