@@ -141,7 +141,7 @@ If not done already, create specific folder 'checkpoints' and 'saved' in 'code' 
 
 ## Training and evaluating data
 
-To train the model run ```main.py```.
+To train the model run ```main_updated.py```.
 After training the model you can visualize the results on validation data by running ```test_show.py```. It will show the image along with the title containing real captions, generated captions and the BLEU score (1 and 2).
 
 Captions are generated **word-by-word** starting with the SOS token. Next predicted word IDs are then being appended for the next LSTM input.
