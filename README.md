@@ -8,8 +8,6 @@ The ```main_update.py``` has a different approach in training:
 - LSTM layer takes input and computes the output of length = ```SEQ_LENGTH``` (instead of length = ```1``` as in ```main.py```) 
 - to make this work, the ```features``` have dimension ```(SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(SEQ_LENGTH, BATCH, WORD_EMB_DIM)```
 
-In the ```model_update.py``` there are only slight changes in the comments to fit the description, but works just as ```model.py```
-
 In the checkpoints folder there are weights trained on the new network with the prefix ```NEW_```
 
 ### Dataset
@@ -103,7 +101,7 @@ Embedding layer is used to obtain embedded representation (as a dense vector) of
 
 Decoder taking as input for the LSTM layer the concatenation of features obtained from the encoder and embedded captions obtained from the embedding layer. Hidden and cell states are zero initialized . Final classifier is a linear layer with output dimension of ```(VOCAB_SIZE)```.
 
-**(old version) Note**: during the training and evaluation, the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```. This approach, however does not bring the full potential out of LSTM. Please check the ```main_updated.py``` for better approach, where the whole sentence is concatenated to the features.
+**(old version) Note**: during the training and evaluation, the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```. This approach, however does not bring the full potential out of LSTM. Please check the ```main_updated.py``` for better approach, where the whole sentence is concatenated to the features. I keep the code for only educational purposes so that others might learn from my mistakes.
 
 <br>
 
