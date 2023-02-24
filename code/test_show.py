@@ -55,7 +55,7 @@ def generate_caption(image: torch.Tensor, image_encoder: Encoder, emb_layer: tor
         SEQ_LENGTH = lstm_input.shape[0]
         
         features = features.repeat(SEQ_LENGTH,1,1)
-        # features : (SEQ_LENGTH, B=1, WORD_EMB_DIM)
+        # features : (SEQ_LENGTH, B=1, IMAGE_EMB_DIM)
         
         next_id_pred, (hidden, cell) = image_decoder.forward(lstm_input, features, hidden, cell)
         # next_id_pred : (SEQ_LENGTH, 1, VOCAB_SIZE)
