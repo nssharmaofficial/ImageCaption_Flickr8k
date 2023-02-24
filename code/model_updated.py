@@ -123,7 +123,7 @@ class Decoder(nn.Module):
 
         Returns:
         
-            > output (torch.Tensor): (1, BATCH, VOCAB_SIZE)
+            > output (torch.Tensor): (SEQ_LENGTH, BATCH, VOCAB_SIZE)
             > (hidden, cell) (torch.Tensor, torch.Tensor): (NUM_LAYER, BATCH, HIDDEN_DIM), (NUM_LAYER, BATCH, HIDDEN_DIM)
         """
         
