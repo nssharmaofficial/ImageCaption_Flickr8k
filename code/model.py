@@ -112,25 +112,25 @@ class Decoder(nn.Module):
         )
         
     def forward(self, embedded_captions: torch.Tensor, features: torch.Tensor, hidden: torch.Tensor, cell: torch.Tensor) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-        """ Forward operation of (word-by-word) decoder. The LSTM input (concatenation of embedded_captions and features) is passed through LSTM and then linear layer.
+        """ Forward operation of decoder. The LSTM input (concatenation of embedded_captions and features) is passed through LSTM and then linear layer.
         
         Args:
         
-            > embedded_captions(torch.Tensor): (SEQ_LENGTH = 1, BATCH, WORD_EMB_DIM)
-            > features (torch.Tensor): (1, BATCH, IMAGE_EMB_DIM)
+            > embedded_captions(torch.Tensor): (SEQ_LENGTH, BATCH, WORD_EMB_DIM)
+            > features (torch.Tensor): (SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)
             > hidden (torch.Tensor): (NUM_LAYER, BATCH, HIDDEN_DIM)
             > cell (torch.Tensor): (NUM_LAYER, BATCH, HIDDEN_DIM)
 
         Returns:
         
-            > output (torch.Tensor): (1, BATCH, VOCAB_SIZE)
+            > output (torch.Tensor): (SEQ_LENGTH, BATCH, VOCAB_SIZE)
             > (hidden, cell) (torch.Tensor, torch.Tensor): (NUM_LAYER, BATCH, HIDDEN_DIM), (NUM_LAYER, BATCH, HIDDEN_DIM)
         """
         
         lstm_input = torch.cat((embedded_captions, features), dim=2)
         
         output, (hidden, cell) = self.lstm(lstm_input, (hidden, cell))
-        # output : (length = 1, BATCH, HIDDEN_DIM)
+        # output : (SEQ_LENGTH, BATCH, HIDDEN_DIM)
         # hidden : (NUM_LAYER, BATCH, HIDDEN_DIM)
         
         output = output.to(self.device)
@@ -172,19 +172,20 @@ if __name__ == '__main__':
     decoder = decoder.to(config.DEVICE)
     
     # create random tensor of images and captions 
-    # generating captions will be word by word so suppose captions have length = 1 (second dimension)
+    # suppose captions have SEQ_LEN = 10 (second dimension)
     images = torch.randn((32, 3, 256, 256)).to(config.DEVICE)
-    captions = torch.randint(low=1, high=100, size=(32, 1), dtype=torch.int).to(config.DEVICE) 
+    captions = torch.randint(low=1, high=100, size=(32, 10), dtype=torch.int).to(config.DEVICE) 
     
     # pass images through encoder
     features = encoder.forward(images = images)
     features = features.unsqueeze(0)
-    print('Features size: ', features.size()) # (1, BATCH, IMAGE_EMD_DIM)
+    features = features.repeat(10,1,1)
+    print('Features size: ', features.size()) # (SEQ_LEN, BATCH, IMAGE_EMD_DIM)
     
     # pass captions through embedding layer
     embedded_captions = emb_layer.forward(captions)
     embedded_captions = embedded_captions.permute(1,0,2)  
-    print('Embedded captions size: ', embedded_captions.size()) # (1, BATCH, WORD_EMB_DIM)
+    print('Embedded captions size: ', embedded_captions.size()) # (SEQ_LEN, BATCH, WORD_EMB_DIM)
     
     # initialize hidden and cell to be of size: (NUM_LAYER, BATCH, HIDDEN_DIM)
     # note: HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM
@@ -199,7 +200,7 @@ if __name__ == '__main__':
         cell=cell
         )
 
-    print('Output size: ', output.size())       # (1, BATCH, VOCAB_SIZE)
+    print('Output size: ', output.size())       # (SEQ_LEN, BATCH, VOCAB_SIZE)
     print('Hidden size: ', hidden_state.size()) # (NUM_LAYER, BATCH, HIDDEN_DIM)
     print('Cell size: ', cell_state.size())     # (NUM_LAYER, BATCH, HIDDEN_DIM)
 
