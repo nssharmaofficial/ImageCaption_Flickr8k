@@ -36,7 +36,7 @@ if __name__ == '__main__':
                             device = config.DEVICE)
  
     criterion = torch.nn.CrossEntropyLoss().requires_grad_(True)
-    parameters = list(image_decoder.parameters()) + list(emb_layer.parameters())
+    parameters = list(image_decoder.parameters()) + list(emb_layer.parameters()) + list(image_encoder.parameters())
     for param in parameters: 
         param.requires_grad_(True)
     optimizer = torch.optim.Adam(params=parameters, lr=config.LR)
@@ -246,6 +246,6 @@ if __name__ == '__main__':
     plt.ylabel('Loss')
     plt.legend(['Train', 'Validation'])
     
-    plt.savefig(f'saved/{config.BATCH}B-{config.HIDDEN_DIM}H-{config.NUM_LAYER}L.jpg')
+    plt.savefig(f'saved/NEW_{config.BATCH}B-{config.HIDDEN_DIM}H-{config.NUM_LAYER}L.jpg')
 
 
