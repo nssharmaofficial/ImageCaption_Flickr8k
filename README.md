@@ -135,7 +135,7 @@ self.ROOT = os.path.join(os.path.expanduser('~'), 'NN_projects', 'ImageCaption_F
 
 ``` 
 
-If not done already, create specific folder 'checkpoints' in 'code' folder to store weights of trained model.
+If not done already, create specific folder 'checkpoints' and 'saved' in 'code' folder to store weights of trained model and the plot of loss & accuracy respectively.
 
 <br>
 
