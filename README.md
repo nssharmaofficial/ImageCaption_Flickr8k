@@ -84,7 +84,7 @@ The whole model consists of 3 parts:
 - embeddings
 - decoder
 
-Running ```model.py``` will perform one forward operation of the whole model (with randomly initialized inputs). The results might help you to understand the dimensions of the outputs better. 
+Running ```model_updated.py``` will perform one forward operation of the whole model (with randomly initialized inputs). The results might help you to understand the dimensions of the outputs better. 
 
 <br>
 
@@ -101,7 +101,7 @@ Embedding layer is used to obtain embedded representation (as a dense vector) of
 
 Decoder taking as input for the LSTM layer the concatenation of features obtained from the encoder and embedded captions obtained from the embedding layer. Hidden and cell states are zero initialized . Final classifier is a linear layer with output dimension of ```(VOCAB_SIZE)```.
 
-**(old version) Note**: during the training and evaluation, the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```. This approach, however does not bring the full potential out of LSTM. Please check the ```main_updated.py``` for better approach, where the whole sentence is concatenated to the features. I keep the code for only educational purposes so that others might learn from my mistakes.
+**(old version: ```main.py```) Note**: during the training and evaluation, the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```. This approach, however does not bring the full potential out of LSTM. Please check the ```main_updated.py``` for better approach, where the whole sentence is concatenated to the features. I keep the code for only educational purposes so that others might learn from my mistakes.
 
 <br>
 
