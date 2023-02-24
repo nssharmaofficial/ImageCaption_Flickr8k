@@ -130,13 +130,13 @@ class Decoder(nn.Module):
         lstm_input = torch.cat((embedded_captions, features), dim=2)
         
         output, (hidden, cell) = self.lstm(lstm_input, (hidden, cell))
-        # output : (length = 1, BATCH, HIDDEN_DIM)
+        # output : (SEQ_LENGTH, BATCH, HIDDEN_DIM)
         # hidden : (NUM_LAYER, BATCH, HIDDEN_DIM)
         
         output = output.to(self.device)
         
         output = self.fc(output)
-        # output : (length = 1, BATCH, VOCAB_SIZE)
+        # output : (SEQ_LENGTH, BATCH, VOCAB_SIZE)
         
         return output, (hidden, cell)
 
