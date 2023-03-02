@@ -12,8 +12,8 @@ from config import *
 from nltk.translate import bleu_score
 
 def generate_caption(image: torch.Tensor, image_encoder: Encoder, emb_layer: torch.nn.Embedding, image_decoder: Decoder, vocab: Vocab, device: torch.device) -> list[str]:
-    """ Generate caption of a single image of size (1, 3, 224, 224). Generating of caption starts with SOS token, and each next predicted word ID
-        is appended for the next LSTM input.
+    """ Generate caption of a single image of size (3, 224, 224). Generating of caption starts with <sos>, and each next predicted word ID
+        is appended for the next LSTM input until the sentence reaches MAX_LENGTH or <eos>.
 
     Returns:
         list[str]: caption for given image
