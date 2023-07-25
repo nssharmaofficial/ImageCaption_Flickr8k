@@ -5,7 +5,7 @@ class Config(object):
     
     def __init__(self) -> None:
 
-        self.DEVICE = torch.device("cuda:0")
+        self.DEVICE = torch.device("cpu")
         
         self.BATCH = 32
         self.EPOCHS = 5
