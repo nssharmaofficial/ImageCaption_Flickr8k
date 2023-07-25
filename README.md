@@ -2,13 +2,6 @@
 
 Image captioning model in pytorch using Resnet50 as encoder and LSTM as decoder.
 
-### Update - important: 
-
-The ```main_update.py``` has a different approach in training:
-- LSTM layer takes input and computes the output of length = ```SEQ_LENGTH``` (instead of length = ```1``` as in ```main.py```) 
-- to make this work, the ```features``` have dimension ```(SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(SEQ_LENGTH, BATCH, WORD_EMB_DIM)```
-
-In the checkpoints folder there are weights trained on the new network with the prefix ```NEW_```
 
 ### Dataset
 - You can download the images and captions [here](https://www.kaggle.com/datasets/adityajn105/flickr8k).
