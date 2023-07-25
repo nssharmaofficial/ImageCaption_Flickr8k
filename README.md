@@ -1,7 +1,10 @@
 # ImageCaption
 
+<br>
+
 Image captioning model in pytorch using Resnet50 as encoder and LSTM as decoder.
 
+<br>
 
 ### Dataset
 - You can download the images and captions [here](https://www.kaggle.com/datasets/adityajn105/flickr8k).
