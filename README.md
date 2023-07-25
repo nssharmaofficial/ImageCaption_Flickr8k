@@ -101,8 +101,6 @@ Embedding layer is used to obtain embedded representation (as a dense vector) of
 
 Decoder taking as input for the LSTM layer the concatenation of features obtained from the encoder and embedded captions obtained from the embedding layer. Hidden and cell states are zero initialized . Final classifier is a linear layer with output dimension of ```(VOCAB_SIZE)```.
 
-**(old version: ```main.py```) Note**: during the training and evaluation, the dimension of the embedded captions before the concatenation will be ```(length = 1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```. This approach, however does not bring the full potential out of LSTM. Please check the ```main_updated.py``` for better approach, where the whole sentence is concatenated to the features. I keep the code for only educational purposes so that others might learn from my mistakes.
-
 <br>
 
 
@@ -141,7 +139,33 @@ If not done already, create specific folder 'checkpoints' and 'saved' in 'code' 
 
 ## Training and evaluating data
 
-To train the model run ```main_updated.py```.
+To train the model run ```main_WordbyWord.py```.
+
+<br>
+
+**Note**: during the training and evaluation, the model is used to generate captions ***word-by-word*** over the ```SEQ_LENGTH-1``` loop (ignoring the last ```<eos>``` token), therefore the dimension of the embedded captions before the concatenation will be ```(length = j+1, BATCH, WORD_EMB_DIM)```, and the dimension of features will be ```(j+1, BATCH,  IMAGE_EMB_DIM)```. The hidden and cell states are initialized to a tensor of size ```(NUM_LAYER, BATCH, HIDDEN_DIM)``` where ```HIDDEN_DIM = IMAGE_EMB_DIM + WORD_EMB_DIM```.
+
+<br> 
+
+So for example the caption: '```<sos>``` dog is running outside ```<eos>```' will be trained over loop:
+- starting with ```<sos>``` token: ```<sos>``` <word_to_be_predicted>' → then <word_to_be_predicted> is compared to the original next word
+- ```<sos>``` dog <word_to_be_predicted> 
+- ```<sos>``` dog is <word_to_be_predicted> 
+- ```<sos>``` dog is running <word_to_be_predicted> 
+- ```<sos>``` dog is running outside <word_to_be_predicted> → so that we learn to predict the ```<eos>``` as well 
+
+<br>
+
+**Note**: The ```main_updated.py``` uses different approach of training, using the whole captions:
+- LSTM layer takes input and computes the output of length = ```SEQ_LENGTH``` (instead of length = ```j+1``` as in ```main_WordbyWord.py```) 
+- to make this work, the ```features``` have dimension ```(SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(j+1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(SEQ_LENGTH, BATCH, WORD_EMB_DIM)```
+
+<br>
+
+**Note** : The ```main.py``` is wrong implementation of the word-by-word prediction training where the dimension of the the input and output of LSTM layer is of length =  ```1``` (instead of length = ```j+1``` as in ```main_WordbyWord.py```), as well as the ```features``` have dimension ```(1, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(j+1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(1, BATCH, WORD_EMB_DIM)```. This means the code was taking always only the ```j-th``` word of the caption in the ```SEQ_LENGTH - 1``` loop instead of taking all the words up to ```j+1```.
+
+<br>
+
 After training the model you can visualize the results on validation data by running ```test_show.py```. It will show the image along with the title containing real captions, generated captions and the BLEU score (1 and 2).
 
 Captions are generated **word-by-word** starting with the SOS token. Next predicted word IDs are then being appended for the next LSTM input.
