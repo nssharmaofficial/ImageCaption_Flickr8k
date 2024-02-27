@@ -135,7 +135,7 @@ If not done already, create specific folder 'checkpoints' and 'saved' in 'code' 
 
 ## Training and evaluating data
 
-To train the model run ```main_WordbyWord.py```.
+To train the model run ```train.py```.
 
 <br>
 
@@ -152,13 +152,9 @@ So for example the caption: '```<sos>``` dog is running outside ```<eos>```' wil
 
 <br>
 
-**Note**: The ```main_updated.py``` uses different approach of training, using the whole captions:
+**Note**: The ```train_whole_sequence.py``` uses different approach of training, using the whole captions:
 - LSTM layer takes input and computes the output of length = ```SEQ_LENGTH``` (instead of length = ```j+1``` as in ```main_WordbyWord.py```) 
-- to make this work, the ```features``` have dimension ```(SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(j+1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(SEQ_LENGTH, BATCH, WORD_EMB_DIM)```
-
-<br>
-
-**Note** : The ```main.py``` is wrong implementation of the word-by-word prediction training where the dimension of the the input and output of LSTM layer is of length =  ```1``` (instead of length = ```j+1``` as in ```main_WordbyWord.py```), as well as the ```features``` have dimension ```(1, BATCH, IMAGE_EMB_DIM)``` ( instead of ```(j+1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(1, BATCH, WORD_EMB_DIM)```. This means the code was taking always only the ```j-th``` word of the caption in the ```SEQ_LENGTH - 1``` loop instead of taking all the words up to ```j+1```.
+- to make this work, the ```features``` have dimension ```(SEQ_LENGTH, BATCH, IMAGE_EMB_DIM)``` (instead of ```(j+1, BATCH, IMAGE_EMB_DIM)```) in order to be concatenated with the ```emb_captions_batch``` of size ```(SEQ_LENGTH, BATCH, WORD_EMB_DIM)```
 
 <br>
 
