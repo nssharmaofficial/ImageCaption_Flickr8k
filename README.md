@@ -117,9 +117,7 @@ Captions are generated **word-by-word** starting with the SOS token. Next predic
 
 Model with **B = 32** and **HIDDEN_DIM = 512**:
 
-![Examples](./examples/32B512H_1.png ) ![Examples](./examples/32B512H_2.png ) 
-
-<br>
+![Examples](./examples/32B512H_1.png ) ![Examples](./examples/32B512H_2.png )
 
 ## Generating captions on sample image
 
