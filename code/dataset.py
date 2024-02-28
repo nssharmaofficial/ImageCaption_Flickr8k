@@ -58,7 +58,7 @@ class ImageCaptionDataset():
         self.transform = transform
 
         sample_list_path = os.path.join(self.config.ROOT, captions_text_file)
-        with open(sample_list_path) as file:
+        with open(file=sample_list_path, mode='r', encoding='utf-8') as file:
             for i, line in enumerate(file):
 
                 # skip header line
